@@ -125,8 +125,50 @@ window is `D` and the current window is `A`.
 ```
 
 # Window Layouts
-TODO
+I'm pretty picky about window layout when I have more than a couple buffers.
+I like to have one primary window and the rest of the buffers/windows in a
+linear layout pinned to the right.
 
+```
+            +----------------+
+            |         |  B   |
+            |         |------|
+            |    A    |  C   |
+            |         |------|
+            |         |  D   |
+            +----------------+
+```
+
+There are many ways to achieve this but they all require multiple steps.  `:ball
+| wincmd H` is probably the easiest one or `:vert ball | wincmd J`. The problem
+with these naive approaches is knowing which buffer will be the main one. After
+each `ball` command, it is hard to know which window will come into focus for
+the `wincmd H` split. The `window#layout` function aims to keep the current
+window or `v:count` window as the main after executing the new layout.
+
+Here's a few interesting commands:
+
+```vim
+" This is my preferred layout 
+command! -nargs=* BallH call window#layout('ball', 'H', <args>)
+
+" Use it with where the number is optional.
+:BallH 3
+
+" Same layout but only effect current windows instead of all buffers.
+command! -nargs=* WinH call window#layout('windo wincmd J', 'H', <args>)
+
+" Example use is, here I've omitted the optional arg which
+" which keeps the current window as primary.
+:WinH
+```
+
+Here's of starting Vim with your new layout command:
+
+```sh
+# How about from shell
+vim +BallH $(git diff --name-only)
+```
 
 # Window Isolation
 An improved `<C-w>o`. I hit this all the time by accident when trying to a
@@ -176,17 +218,16 @@ nnoremap <C-w>gk :<C-U>call window#join('aboveleft split', v:count)   <BAR>norma
 
 " Force a primary window layout.
 " The capital HJKL forces the primary window to a specific direction.
-command! LayoutH call window#layout('ball', 'H', winnr())
-command! LayoutL call window#layout('ball', 'L', winnr())
-command! LayoutJ call window#layout('vertical ball', 'J', winnr())
-command! LayoutK call window#layout('vertical ball', 'K', winnr())
+command! -nargs=* LayoutH call window#layout('ball', 'H', <args>)
+command! -nargs=* LayoutJ call window#layout('vertical ball', 'J', <args>) 
+command! -nargs=* LayoutK call window#layout('vertical ball', 'K', <args>) 
+command! -nargs=* LayoutL call window#layout('ball', 'L', <args>)
 
-" If this is done a lot, map it to keys
-nnoremap <C-w>gH :LayoutH<CR>
-nnoremap <C-w>gL :LayoutL<CR>
-nnoremap <C-w>gK :LayoutK<CR>
-nnoremap <C-w>gJ :LayoutJ<CR>
-
+" Map the layout commands to something if that's your style.
+nnoremap <C-w>gH :<C-U>LayoutH v:count<CR>
+nnoremap <C-w>gJ :<C-U>LayoutJ v:count<CR>
+nnoremap <C-w>gK :<C-U>LayoutK v:count<CR>
+nnoremap <C-w>gL :<C-U>LayoutL v:count<CR>
 
 " Improve window only, to split to new tab instead
 nnoremap <C-w>o :call window#only()<cr>
