@@ -84,13 +84,17 @@ endfunction
 
 " Based on current window and previous window
 " Usage: :call window#layout('ball', 'H', winnr())
-function! window#layout(split_all, main, idx, ...) abort
+function! window#layout(split_all, cmd, ...) abort
+  " figure out the winnr before splitting, otherwise
+  " original layouts winnr() could change.
+  let main_winnr = a:0 > 0 ? (0 + a:1) : 0 
+  let main_winnr = main_winnr < 1 ? winnr() : main_winnr
+
   let winnr_to_bufnr = s:winnr_bufnr_dict()
   exec a:split_all
   let bufnr_to_winnr = s:bufnr_winnr_dict()
- 
-  exec bufnr_to_winnr[winnr_to_bufnr[a:idx]].'wincmd w'
-  exec 'wincmd '. a:main
+  exec bufnr_to_winnr[winnr_to_bufnr[main_winnr]].'wincmd w'
+  exec 'wincmd '. a:cmd
 endfunction
 
 " privates
